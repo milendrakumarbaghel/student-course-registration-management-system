@@ -127,4 +127,29 @@ public class StudentDao {
         }
         return 0;
     }
+
+    public boolean existsByEmailOrPhone(String email, String phone) {
+        return existsByEmailOrPhone(email, phone, null);
+    }
+
+    public boolean existsByEmailOrPhone(String email, String phone, Integer excludeStudentId) {
+        try (Connection con = DBConnection.getConnection()) {
+            StringBuilder query = new StringBuilder(
+                    "SELECT 1 FROM students WHERE (email = ? OR phone = ?)");
+            if (excludeStudentId != null && excludeStudentId > 0) {
+                query.append(" AND student_id <> ?");
+            }
+            query.append(" LIMIT 1");
+            PreparedStatement ps = con.prepareStatement(query.toString());
+            ps.setString(1, email);
+            ps.setString(2, phone);
+            if (excludeStudentId != null && excludeStudentId > 0) {
+                ps.setInt(3, excludeStudentId);
+            }
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to check student uniqueness", e);
+        }
+    }
 }

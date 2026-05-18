@@ -105,12 +105,24 @@ public class StudentServlet extends HttpServlet {
 
         student.setAge(age);
         StudentDao studentDao = new StudentDao();
-
-        if ("/student/add".equals(path)) {
-            studentDao.addStudent(student);
-        } else {
-            student.setStudentId(parseId(req.getParameter("studentId")));
+        if (isEdit) {
+            if (studentDao.existsByEmailOrPhone(student.getEmail(), student.getPhone(), student.getStudentId())) {
+                req.setAttribute("error", "Email or phone already exists.");
+                req.setAttribute("mode", "edit");
+                req.setAttribute("student", student);
+                req.getRequestDispatcher("/WEB-INF/views/student-form.jsp").forward(req, resp);
+                return;
+            }
             studentDao.updateStudent(student);
+        } else {
+            if (studentDao.existsByEmailOrPhone(student.getEmail(), student.getPhone())) {
+                req.setAttribute("error", "Email or phone already exists.");
+                req.setAttribute("mode", "add");
+                req.setAttribute("student", student);
+                req.getRequestDispatcher("/WEB-INF/views/student-form.jsp").forward(req, resp);
+                return;
+            }
+            studentDao.addStudent(student);
         }
 
         resp.sendRedirect(req.getContextPath() + "/students");

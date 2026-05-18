@@ -10,8 +10,8 @@ CREATE TABLE IF NOT EXISTS admin (
 CREATE TABLE IF NOT EXISTS students (
   student_id INT PRIMARY KEY AUTO_INCREMENT,
   student_name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) NOT NULL,
-  phone VARCHAR(15) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  phone VARCHAR(15) NOT NULL UNIQUE,
   age INT NOT NULL,
   city VARCHAR(50) NOT NULL
 );
@@ -35,3 +35,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   CONSTRAINT fk_registration_student FOREIGN KEY (student_id) REFERENCES students(student_id),
   CONSTRAINT fk_registration_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
+
+INSERT INTO admin(username, password)
+SELECT 'testadmin', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM admin WHERE username='testadmin');

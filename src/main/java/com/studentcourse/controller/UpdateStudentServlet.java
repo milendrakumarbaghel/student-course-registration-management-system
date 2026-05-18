@@ -39,8 +39,18 @@ public class UpdateStudentServlet extends HttpServlet {
                 return;
             }
 
+            StudentDao studentDao = new StudentDao();
+            if (studentDao.existsByEmailOrPhone(student.getEmail(), student.getPhone(), student.getStudentId())) {
+                student.setAge(age);
+                req.setAttribute("error", "Email or phone already exists.");
+                req.setAttribute("mode", "edit");
+                req.setAttribute("student", student);
+                req.getRequestDispatcher("/WEB-INF/views/student-form.jsp").forward(req, resp);
+                return;
+            }
+
             student.setAge(age);
-            new StudentDao().updateStudent(student);
+            studentDao.updateStudent(student);
             resp.sendRedirect(req.getContextPath() + "/students");
         } catch (RuntimeException ex) {
             ErrorUtil.forwardToErrorPage(req, resp, "Database connection failure. Please try again later.");
