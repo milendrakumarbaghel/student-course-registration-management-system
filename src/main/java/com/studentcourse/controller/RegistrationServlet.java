@@ -75,15 +75,23 @@ public class RegistrationServlet extends HttpServlet {
 
         String error = RegistrationValidator.validate(studentId, courseId, registrationDateText, status);
         RegistrationDao registrationDao = new RegistrationDao();
+        StudentDao studentDao = new StudentDao();
+        CourseDao courseDao = new CourseDao();
 
+        if (error == null && !studentDao.existsById(studentId)) {
+            error = "Invalid student ID.";
+        }
+        if (error == null && !courseDao.existsById(courseId)) {
+            error = "Invalid course ID.";
+        }
         if (error == null && registrationDao.hasActiveDuplicate(studentId, courseId)) {
             error = "Active registration for this student-course pair already exists.";
         }
 
         if (error != null) {
             req.setAttribute("error", error);
-            req.setAttribute("students", new StudentDao().getAllStudents());
-            req.setAttribute("courses", new CourseDao().getAllCourses());
+            req.setAttribute("students", studentDao.getAllStudents());
+            req.setAttribute("courses", courseDao.getAllCourses());
             req.setAttribute("selectedStudentId", studentId);
             req.setAttribute("selectedCourseId", courseId);
             req.setAttribute("selectedDate", registrationDateText);

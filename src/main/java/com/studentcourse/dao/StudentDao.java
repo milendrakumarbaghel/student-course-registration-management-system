@@ -128,6 +128,18 @@ public class StudentDao {
         return 0;
     }
 
+    public boolean existsById(int studentId) {
+        try (Connection con = DBConnection.getConnection()) {
+            String query = "SELECT 1 FROM students WHERE student_id=? LIMIT 1";
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setInt(1, studentId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to validate student existence", e);
+        }
+    }
+
     public boolean existsByEmailOrPhone(String email, String phone) {
         return existsByEmailOrPhone(email, phone, null);
     }

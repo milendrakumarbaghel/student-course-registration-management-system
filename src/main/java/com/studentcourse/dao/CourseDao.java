@@ -85,6 +85,18 @@ public class CourseDao {
         }
     }
 
+    public boolean existsById(int courseId) {
+        try (Connection con = DBConnection.getConnection()) {
+            String query = "SELECT 1 FROM courses WHERE course_id=? LIMIT 1";
+            PreparedStatement ps = con.prepareStatement(query);
+            ps.setInt(1, courseId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to validate course existence", e);
+        }
+    }
+
     public boolean hasActiveRegistration(int courseId) {
         try (Connection con = DBConnection.getConnection()) {
             String query = "SELECT 1 FROM registrations WHERE course_id=? AND status='Active' LIMIT 1";
