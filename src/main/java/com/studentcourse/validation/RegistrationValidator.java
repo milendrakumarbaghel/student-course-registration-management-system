@@ -14,7 +14,11 @@ public final class RegistrationValidator {
             return "Status must be Active, Completed, or Cancelled.";
         }
         try {
-            Date.valueOf(registrationDateText);
+            Date registrationDate = Date.valueOf(registrationDateText);
+            Date today = new Date(System.currentTimeMillis());
+            if (registrationDate.after(today)) {
+                return "Registration date cannot be after today.";
+            }
         } catch (Exception e) {
             return "Registration date is invalid.";
         }
@@ -29,4 +33,3 @@ public final class RegistrationValidator {
         return value == null || value.trim().isEmpty();
     }
 }
-
