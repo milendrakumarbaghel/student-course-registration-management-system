@@ -15,12 +15,14 @@ Servlet/JSP/JDBC mini project for admin-driven student, course, and registration
 - Admin login with DB credential verification
 - Session-based authentication (`loggedInUser`, `loginTime`)
 - Remember username using cookie (`rememberedUsername`)
+- Logout clears session and auth cookies
 - Dashboard with counts (students, courses, registrations)
 - Student CRUD (add, list, edit, delete with registration restriction)
 - Course CRUD (add, list, edit, delete with active-registration restriction)
 - Registration CRUD (add, list, status update, delete)
 - Duplicate active registration prevention
-- Logout and session invalidation
+- Duplicate student email/phone prevention
+- Validation: required fields, age >= 18, fees > 0, valid email/phone, duration in months, registration date not after today
 - RequestDispatcher on validation/business errors
 - sendRedirect on successful actions
 - Servlet lifecycle logging on key servlets
@@ -48,18 +50,19 @@ Servlet/JSP/JDBC mini project for admin-driven student, course, and registration
 - `RegistrationFormServlet`, `RegisterStudentCourseServlet`, `ViewRegistrationsServlet`, `UpdateRegistrationStatusServlet`, `DeleteRegistrationServlet`
 
 ## Package Structure
-- `com.studentcourse.controller` - Servlets and auth utility
+- `com.studentcourse.controller` - Servlets and request flow
 - `com.studentcourse.dao` - JDBC DAO classes
 - `com.studentcourse.model` - Model POJOs
-- `com.studentcourse.util` - DB connection utility
+- `com.studentcourse.util` - DB connection, auth, and error utilities
+- `com.studentcourse.validation` - Validation rules
 - `src/main/webapp/WEB-INF/views` - JSP views
 
 ## Database Setup
-Create DB and tables in MySQL:
+Create DB and tables in MySQL (or run `src/main/resources/schema.sql`):
 
 ```sql
-CREATE DATABASE IF NOT EXISTS student_course_db;
-USE student_course_db;
+CREATE DATABASE IF NOT EXISTS student_course_registration;
+USE student_course_registration;
 
 CREATE TABLE IF NOT EXISTS admin (
   admin_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -70,8 +73,8 @@ CREATE TABLE IF NOT EXISTS admin (
 CREATE TABLE IF NOT EXISTS students (
   student_id INT PRIMARY KEY AUTO_INCREMENT,
   student_name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) NOT NULL,
-  phone VARCHAR(15) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  phone VARCHAR(15) NOT NULL UNIQUE,
   age INT NOT NULL,
   city VARCHAR(50) NOT NULL
 );
@@ -90,25 +93,26 @@ CREATE TABLE IF NOT EXISTS registrations (
   course_id INT NOT NULL,
   registration_date DATE NOT NULL,
   status VARCHAR(20) NOT NULL,
+  CONSTRAINT unique_student_course UNIQUE (student_id, course_id),
   CONSTRAINT fk_registration_student FOREIGN KEY (student_id) REFERENCES students(student_id),
   CONSTRAINT fk_registration_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
 );
 
 INSERT INTO admin(username, password)
-SELECT 'admin', 'admin123'
-WHERE NOT EXISTS (SELECT 1 FROM admin WHERE username='admin');
+SELECT 'testadmin', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM admin WHERE username='testadmin');
 ```
 
 ## DB Configuration
 `DBConnection` reads env vars with defaults:
-- `DB_URL` (default: `jdbc:mysql://localhost:3306/student_course_db`)
+- `DB_URL` (default: `jdbc:mysql://localhost:3306/student_course_registration`)
 - `DB_USER` (default: `root`)
 - `DB_PASS` (default: `admin`)
 
 Example before running Tomcat:
 
 ```bash
-export DB_URL="jdbc:mysql://localhost:3306/student_course_db"
+export DB_URL="jdbc:mysql://localhost:3306/student_course_registration"
 export DB_USER="root"
 export DB_PASS="admin"
 ```
@@ -146,4 +150,3 @@ Console logs are present in:
 ## Notes
 - This is a learning project; plain-text password handling is intentionally kept simple for classroom scope.
 - In real systems, use password hashing, CSRF protection, and centralized authorization filters.
-
